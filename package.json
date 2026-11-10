@@ -8,6 +8,7 @@
   "scripts": {
     "bootstrap": "pnpm install && pnpm infra:up && pnpm build && pnpm migrate && pnpm pubsub:setup",
     "dev": "pnpm infra:up && pnpm pubsub:setup && pnpm build && pnpm -r --parallel --if-present dev",
+    "dev:win": "pnpm infra:up && pnpm pubsub:setup && pnpm build && pnpm -r --parallel --if-present dev:win",
     "start": "pnpm -r --parallel --filter \"./services/*\" start",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
@@ -21,7 +22,9 @@
     "infra:reset": "docker compose -f infra/docker-compose.yml down -v",
     "infra:logs": "docker compose -f infra/docker-compose.yml logs postgres",
     "infra:errors": "docker compose -f infra/docker-compose.yml logs postgres | grep -A2 ERROR || echo 'No errors in Postgres logs.'",
+    "infra:errors:win": "powershell -NoProfile -Command \"$out = docker compose -f infra/docker-compose.yml logs postgres | Select-String ERROR -Context 0,2; if ($out) { $out } else { 'No errors in Postgres logs.' }\"",
     "check:db-isolation": "bash scripts/check-db-isolation.sh",
+    "check:db-isolation:win": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-db-isolation.ps1",
     "proto:gen": "pnpm --filter @ledgerly/proto gen",
     "proto:lint": "pnpm --filter @ledgerly/proto lint",
     "ledger:migrate": "pnpm --filter ledger-service build && pnpm --filter ledger-service migration:run",

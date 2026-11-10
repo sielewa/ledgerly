@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:win": "pnpm run dev",
     "build": "tsc --noEmit -p tsconfig.json && vite build",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "preview": "vite preview"

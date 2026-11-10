@@ -7,7 +7,8 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "start": "node --enable-source-maps dist/main.js",
-    "dev": "tsc -p tsconfig.json && (tsc -p tsconfig.json --watch --preserveWatchOutput & node --watch --enable-source-maps dist/main.js)"
+    "dev": "tsc -p tsconfig.json && (tsc -p tsconfig.json --watch --preserveWatchOutput & node --watch --enable-source-maps dist/main.js)",
+    "dev:win": "tsc -p tsconfig.json && start /b node --watch --enable-source-maps dist/main.js && tsc -p tsconfig.json --watch --preserveWatchOutput"
   },
   "dependencies": {
     "@grpc/grpc-js": "1.14.7",

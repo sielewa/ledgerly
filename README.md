@@ -106,6 +106,21 @@ pnpm seed        # (once, with services running) demo account with 1000.00 PLN f
 pnpm test        # unit tests
 ```
 
+### Windows
+
+Docker Desktop needs WSL 2 (`wsl --install` in an administrator PowerShell, then reboot). pnpm runs package scripts
+with `cmd.exe` on Windows, so the scripts that rely on POSIX shell syntax have a `:win` twin:
+
+| macOS / Linux             | Windows                       |
+| ------------------------- | ----------------------------- |
+| `pnpm dev`                | `pnpm dev:win`                |
+| `pnpm check:db-isolation` | `pnpm check:db-isolation:win` |
+| `pnpm infra:errors`       | `pnpm infra:errors:win`       |
+
+Everything else (`bootstrap`, `build`, `migrate`, `seed`, `test`, the `node scripts/*.ts` reproductions) works as is.
+Chaos switches are set the PowerShell way, e.g. `$env:CRASH_AFTER_COMMIT='true'; pnpm --filter invoice-service start`
+(and `Remove-Item Env:CRASH_AFTER_COMMIT` afterwards).
+
 Open <http://localhost:5173>, create an invoice, issue it and pay it. The IBAN presets choose how the bank behaves
 (accept / reject / time out), so every saga path can be clicked through. Or run any reproduction script, e.g.
 `node scripts/payment-saga.ts`; each script's header says which services and chaos switches it needs.

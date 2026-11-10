@@ -9,7 +9,8 @@
     "lint": "buf lint",
     "build": "buf generate && tsc -p tsconfig.json",
     "typecheck": "buf generate && tsc -p tsconfig.json --noEmit",
-    "dev": "buf generate && tsc -p tsconfig.json --watch --preserveWatchOutput"
+    "dev": "buf generate && tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "dev:win": "pnpm run dev"
   },
   "devDependencies": {
     "@bufbuild/buf": "1.75.0",

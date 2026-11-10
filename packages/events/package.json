@@ -7,7 +7,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput"
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "dev:win": "pnpm run dev"
   },
   "dependencies": {
     "zod": "4.6.7"

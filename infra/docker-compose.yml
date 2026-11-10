@@ -27,7 +27,8 @@ services:
     command: /google-cloud-sdk/platform/pubsub-emulator/bin/cloud-pubsub-emulator --host=0.0.0.0 --port=8085
     environment:
       # The JVM warns about SVE detection on Apple M4; disabling SVE keeps it quiet and safe.
-      JAVA_TOOL_OPTIONS: '-XX:UseSVE=0'
+      # UseSVE exists only on ARM JVMs; IgnoreUnrecognizedVMOptions lets the x86 JVM (Windows/Linux) start anyway.
+      JAVA_TOOL_OPTIONS: '-XX:+IgnoreUnrecognizedVMOptions -XX:UseSVE=0'
     ports:
       - '8085:8085'
     healthcheck:
