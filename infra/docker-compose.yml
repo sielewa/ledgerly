@@ -1,0 +1,40 @@
+name: ledgerly
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      # Superuser for local admin only. Services never use it — each has its own user (see init/).
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Scripts here run ONLY when the data volume is empty (first start).
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  pubsub:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    # We call the emulator launcher directly instead of `gcloud beta emulators pubsub start`:
+    # on Apple M4 the gcloud CLI itself crashes with SIGILL (exit 132) in this image.
+    # The emulator does not validate project IDs — clients just use any ID (we use "ledgerly-local").
+    command: /google-cloud-sdk/platform/pubsub-emulator/bin/cloud-pubsub-emulator --host=0.0.0.0 --port=8085
+    environment:
+      # The JVM warns about SVE detection on Apple M4; disabling SVE keeps it quiet and safe.
+      JAVA_TOOL_OPTIONS: '-XX:UseSVE=0'
+    ports:
+      - '8085:8085'
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -sf http://localhost:8085 || exit 1']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  pgdata:

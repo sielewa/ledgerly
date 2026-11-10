@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package ledgerly.payment.v1;
+
+import "ledgerly/common/v1/money.proto";
+
+// Pays an ISSUED invoice: an orchestrated saga (ledger hold -> bank transfer -> capture, or release on failure).
+// The outcome is asynchronous: StartPayment returns the current saga state; poll GetPayment for the final one.
+//
+// Error codes:
+//   NOT_FOUND            invoice or payment does not exist
+//   INVALID_ARGUMENT     missing idempotency_key, bad ids
+//   FAILED_PRECONDITION  the invoice is not ISSUED, or it already has an active payment
+service PaymentService {
+  rpc StartPayment(StartPaymentRequest) returns (StartPaymentResponse);
+  rpc GetPayment(GetPaymentRequest) returns (GetPaymentResponse);
+}
+
+enum PaymentStatus {
+  PAYMENT_STATUS_UNSPECIFIED = 0;
+  PAYMENT_STATUS_STARTED = 1;
+  PAYMENT_STATUS_FUNDS_HELD = 2;
+  PAYMENT_STATUS_SENT_TO_BANK = 3;
+  PAYMENT_STATUS_BANK_UNKNOWN = 4;
+  PAYMENT_STATUS_COMPENSATING = 5;
+  PAYMENT_STATUS_COMPLETED = 6;
+  PAYMENT_STATUS_FAILED = 7;
+}
+
+message Payment {
+  string id = 1;
+  string invoice_id = 2;
+  string payer_account_id = 3;
+  ledgerly.common.v1.Money amount = 4;
+  PaymentStatus status = 5;
+  // Set when status is FAILED.
+  string failure_reason = 6;
+}
+
+message StartPaymentRequest {
+  // Chosen by the client once per "Pay" click and resent on retries.
+  string idempotency_key = 1;
+  string invoice_id = 2;
+}
+
+message StartPaymentResponse {
+  Payment payment = 1;
+}
+
+message GetPaymentRequest {
+  string payment_id = 1;
+}
+
+message GetPaymentResponse {
+  Payment payment = 1;
+}

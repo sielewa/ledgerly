@@ -1,0 +1,15 @@
+{
+  "name": "bank-simulator",
+  "version": "0.0.0",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node --enable-source-maps dist/main.js",
+    "dev": "tsc -p tsconfig.json && (tsc -p tsconfig.json --watch --preserveWatchOutput & node --watch --enable-source-maps dist/main.js)"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2"
+  }
+}

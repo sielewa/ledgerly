@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Installs the pnpm version pinned in package.json ("packageManager").
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Generates TypeScript from .proto files and compiles every package (needed for type-aware lint).
+      - run: pnpm build
+      - run: pnpm lint
+      - run: pnpm format:check
+      # Unit tests only: state machine, webhook signature, saga decision table. The reproduction scripts
+      # in scripts/ need the full local stack (Postgres, Pub/Sub emulator, all services) and are run by hand.
+      - run: pnpm test

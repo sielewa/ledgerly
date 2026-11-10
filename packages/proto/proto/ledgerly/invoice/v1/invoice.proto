@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package ledgerly.invoice.v1;
+
+import "ledgerly/common/v1/money.proto";
+
+// Invoices that a Ledgerly customer pays from their ledger account to an external payee (via bank transfer).
+//
+// Lifecycle (state machine):
+//   DRAFT -> ISSUED -> PAYMENT_PENDING -> PAID
+//                      PAYMENT_PENDING -> ISSUED   (payment failed, can be paid again)
+// Any other transition is rejected with FAILED_PRECONDITION.
+//
+// Error codes:
+//   NOT_FOUND            invoice does not exist
+//   INVALID_ARGUMENT     bad amount, IBAN, missing fields
+//   FAILED_PRECONDITION  transition not allowed from the current status
+service InvoiceService {
+  // Creates an invoice in DRAFT.
+  rpc CreateInvoice(CreateInvoiceRequest) returns (CreateInvoiceResponse);
+  // DRAFT -> ISSUED. Calling it again on an ISSUED invoice returns the invoice (naturally idempotent).
+  rpc IssueInvoice(IssueInvoiceRequest) returns (IssueInvoiceResponse);
+  rpc GetInvoice(GetInvoiceRequest) returns (GetInvoiceResponse);
+  // Newest first. Added later as a new RPC: existing clients are unaffected (additive change).
+  rpc ListInvoices(ListInvoicesRequest) returns (ListInvoicesResponse);
+}
+
+enum InvoiceStatus {
+  INVOICE_STATUS_UNSPECIFIED = 0;
+  INVOICE_STATUS_DRAFT = 1;
+  INVOICE_STATUS_ISSUED = 2;
+  INVOICE_STATUS_PAYMENT_PENDING = 3;
+  INVOICE_STATUS_PAID = 4;
+}
+
+message Invoice {
+  string id = 1;
+  // Ledger account that will pay. Owned by ledger-service: invoice-service only stores the id.
+  string payer_account_id = 2;
+  string payee_name = 3;
+  string payee_iban = 4;
+  ledgerly.common.v1.Money amount = 5;
+  InvoiceStatus status = 6;
+}
+
+message CreateInvoiceRequest {
+  string payer_account_id = 1;
+  string payee_name = 2;
+  string payee_iban = 3;
+  ledgerly.common.v1.Money amount = 4;
+  // Chosen by the CLIENT once per user intent (e.g. per opened form) and resent on every retry.
+  // Added as a NEW field number: old clients simply don't send it, old servers ignore it (additive change).
+  string idempotency_key = 5;
+}
+
+message CreateInvoiceResponse {
+  Invoice invoice = 1;
+}
+
+message IssueInvoiceRequest {
+  string invoice_id = 1;
+}
+
+message IssueInvoiceResponse {
+  Invoice invoice = 1;
+}
+
+message GetInvoiceRequest {
+  string invoice_id = 1;
+}
+
+message GetInvoiceResponse {
+  Invoice invoice = 1;
+}
+
+message ListInvoicesRequest {
+  // 1..100, default 50.
+  int32 limit = 1;
+  // Optional filter: only invoices paid from this ledger account. Empty = all invoices.
+  // Added as a new field number: old clients don't send it and still get every invoice (additive change).
+  string payer_account_id = 2;
+}
+
+message ListInvoicesResponse {
+  repeated Invoice invoices = 1;
+}

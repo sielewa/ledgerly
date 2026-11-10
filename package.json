@@ -1,0 +1,44 @@
+{
+  "name": "ledgerly",
+  "private": true,
+  "packageManager": "pnpm@12.16.1",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "bootstrap": "pnpm install && pnpm infra:up && pnpm build && pnpm migrate && pnpm pubsub:setup",
+    "dev": "pnpm infra:up && pnpm pubsub:setup && pnpm build && pnpm -r --parallel --if-present dev",
+    "start": "pnpm -r --parallel --filter \"./services/*\" start",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r --if-present test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "migrate": "pnpm -r --filter \"./services/*\" --if-present migration:run",
+    "infra:up": "docker compose -f infra/docker-compose.yml up -d --wait",
+    "infra:down": "docker compose -f infra/docker-compose.yml down",
+    "infra:reset": "docker compose -f infra/docker-compose.yml down -v",
+    "infra:logs": "docker compose -f infra/docker-compose.yml logs postgres",
+    "infra:errors": "docker compose -f infra/docker-compose.yml logs postgres | grep -A2 ERROR || echo 'No errors in Postgres logs.'",
+    "check:db-isolation": "bash scripts/check-db-isolation.sh",
+    "proto:gen": "pnpm --filter @ledgerly/proto gen",
+    "proto:lint": "pnpm --filter @ledgerly/proto lint",
+    "ledger:migrate": "pnpm --filter ledger-service build && pnpm --filter ledger-service migration:run",
+    "invoice:migrate": "pnpm --filter invoice-service build && pnpm --filter invoice-service migration:run",
+    "notification:migrate": "pnpm --filter notification-service build && pnpm --filter notification-service migration:run",
+    "pubsub:setup": "node scripts/pubsub-setup.ts",
+    "bank": "pnpm --filter bank-simulator build && pnpm --filter bank-simulator start",
+    "payment:migrate": "pnpm --filter payment-service build && pnpm --filter payment-service migration:run",
+    "seed": "node scripts/seed-demo.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "^24.19.2",
+    "eslint": "10.14.0",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.9.10",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "8.72.1"
+  }
+}

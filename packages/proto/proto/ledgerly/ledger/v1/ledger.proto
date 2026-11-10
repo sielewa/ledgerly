@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package ledgerly.ledger.v1;
+
+import "ledgerly/common/v1/money.proto";
+
+// Double-entry ledger: accounts, balances and holds (reservations of funds).
+//
+// Every mutating call takes an `idempotency_key` chosen by the caller. Repeating a call with the same
+// key and the same request returns the original response without executing it again. Reusing a key
+// with a DIFFERENT request is rejected with INVALID_ARGUMENT.
+//
+// Error codes:
+//   NOT_FOUND            account or hold does not exist
+//   INVALID_ARGUMENT     bad amount, currency mismatch, idempotency key reused with another request
+//   FAILED_PRECONDITION  insufficient available funds, hold is not ACTIVE
+service LedgerService {
+  // Creates an account. Needed so that tests and other services can set up customers.
+  rpc OpenAccount(OpenAccountRequest) returns (OpenAccountResponse);
+  // Money comes in from outside (e.g. a bank transfer). Posts: customer +X, bank clearing -X.
+  rpc PostDeposit(PostDepositRequest) returns (PostDepositResponse);
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
+  // Reserves funds. Creates no ledger entries; only reduces the available balance.
+  rpc PlaceHold(PlaceHoldRequest) returns (PlaceHoldResponse);
+  // Turns an ACTIVE hold into a real debit. Posts: customer -X, bank clearing +X.
+  rpc CaptureHold(CaptureHoldRequest) returns (CaptureHoldResponse);
+  // Cancels an ACTIVE hold. Creates no ledger entries.
+  rpc ReleaseHold(ReleaseHoldRequest) returns (ReleaseHoldResponse);
+}
+
+message OpenAccountRequest {
+  string idempotency_key = 1;
+  // Human-readable unique code, e.g. "customer:acme:PLN".
+  string code = 2;
+  // ISO 4217, e.g. "PLN".
+  string currency = 3;
+}
+
+message OpenAccountResponse {
+  string account_id = 1;
+}
+
+message PostDepositRequest {
+  string idempotency_key = 1;
+  string account_id = 2;
+  ledgerly.common.v1.Money amount = 3;
+}
+
+message PostDepositResponse {
+  string transaction_id = 1;
+}
+
+message GetBalanceRequest {
+  string account_id = 1;
+}
+
+message GetBalanceResponse {
+  string account_id = 1;
+  // Sum of all posted entries.
+  ledgerly.common.v1.Money balance = 2;
+  // Sum of ACTIVE holds.
+  ledgerly.common.v1.Money held = 3;
+  // balance - held: what the customer can still spend.
+  ledgerly.common.v1.Money available = 4;
+}
+
+message PlaceHoldRequest {
+  string idempotency_key = 1;
+  string account_id = 2;
+  ledgerly.common.v1.Money amount = 3;
+}
+
+message PlaceHoldResponse {
+  string hold_id = 1;
+}
+
+message CaptureHoldRequest {
+  string idempotency_key = 1;
+  string hold_id = 2;
+}
+
+message CaptureHoldResponse {
+  string transaction_id = 1;
+}
+
+message ReleaseHoldRequest {
+  string idempotency_key = 1;
+  string hold_id = 2;
+}
+
+message ReleaseHoldResponse {}

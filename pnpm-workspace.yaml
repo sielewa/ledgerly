@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+  - packages/*
+  - services/*
+  - scripts
+allowBuilds:
+  '@bufbuild/buf': false
+  protobufjs: false

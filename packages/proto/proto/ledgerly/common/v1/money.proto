@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package ledgerly.common.v1;
+
+// Amount of money in the currency's smallest unit (e.g. grosze for PLN, cents for EUR).
+// Never use floating point for money.
+message Money {
+  // Smallest currency unit, e.g. 12345 = 123.45 PLN. Signed: negative values are used for debits.
+  int64 amount_minor = 1;
+  // ISO 4217 currency code, e.g. "PLN".
+  string currency = 2;
+}
